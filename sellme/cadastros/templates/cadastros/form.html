@@ -1,0 +1,19 @@
+{% extends "paginas/modelo.html" %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+{% block conteudo %}
+
+<h3>
+    {{ titulo | default:"Cadastro" }}
+</h3>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+
+</form>
+
+{% endblock %}

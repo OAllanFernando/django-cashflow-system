@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "paginas.apps.PaginasConfig", # ativando esse modulo
+    "cadastros.apps.CadastrosConfig", # ativando esse modulo
+    "crispy_forms", # ativando esse modulo
+    "crispy_bootstrap5", # ativando esse modulo    
 ]
 
 MIDDLEWARE = [
@@ -74,10 +77,26 @@ WSGI_APPLICATION = "sellme.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+
+# Esse é pra usar o Sqlite
+#DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'seller',  # Replace with your MySQL database name
+        'USER': 'root',  # Replace with your MySQL username
+        'PASSWORD': 'allanrafaela123',  # Replace with your MySQL password
+        'HOST': 'localhost',  # Set to the host where your MySQL server is running
+        'PORT': '3306',  # Set to the port used by your MySQL server
+        'OPTIONS': {
+            'charset': 'utf8mb4',  # Use utf8mb4 for full Unicode support
+        },
     }
 }
 
@@ -125,3 +144,7 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Configurando o Crispy
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
+CRISPY_TEMPLATE_PACK = 'bootstrap5'

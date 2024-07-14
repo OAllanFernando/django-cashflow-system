@@ -1,0 +1,21 @@
+https://www.youtube.com/watch?v=NNHlGCdQSNw&list=PLjv17QYEBJPpd6nI-MXpIa4qR7prKfPQz&index=3&t=442s
+
+
+workon django2 // para entrar no ambiente pra rodar esse projeto
+
+
+href= "{% url 'sobre' %}"
+Assim cria links
+
+
+https://docs.google.com/document/d/13PMBiE3AwCjvp-iJ4obY8E1uPQcbIR3aUvbE2AAiVx8/edit
+
+Docs desse projeto tutrial
+
+
+python manage startapp cadastros
+Cria um novo app
+
+
+python manage.py makemigrations  // cria o sql pra qxecucao
+python manage.py migrate // cria no banco
