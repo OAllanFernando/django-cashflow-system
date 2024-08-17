@@ -55,6 +55,7 @@ class Produto(models.Model):
         return f"{self.nome}"
         # return self.nome
 
+# fazer item entrada e saida diferentes (classes) 
 class Item(models.Model):
     quantidade = models.IntegerField()
     produto = models.ForeignKey(Produto, on_delete=models.PROTECT)
@@ -74,6 +75,8 @@ class Servico(models.Model):
         return f"{self.nome}"
         # return self.nome
 
+
+# 
 class Entrada(models.Model):
     descricao = models.TextField()
     data = models.DateField()
@@ -87,6 +90,7 @@ class Entrada(models.Model):
     def __str__(self):
         return f"Entrada: {self.descricao} - {self.data}"
 
+# Pensei aqui e podemos adicionar servicos em saids, no caso, o cliente pode ter comprado um produto e um servico
 class Saida(models.Model):
     descricao = models.TextField()
     data = models.DateField()

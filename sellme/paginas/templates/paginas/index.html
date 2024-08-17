@@ -3,7 +3,28 @@
 {% load static %}
 
 {% block conteudo %}
+
 <h3>Bem Vindos ao sistema</h3>
 
-<p>Em construção!</p>
+{% if not request.user.is_authenticated %}
+    <p>
+        Para acessar o sistema, faça o login.
+    </p>
+    <p>
+        <a href="{% url 'login' %}" class="btn btn-success">Login</a>
+    </p>
+
+{% else %}
+
+<p>Esse é um sistema de entrada e saida de produtos e serviços. 
+    Nele você pode cadastrar produtos, serviços, clientes. Suas entradas e saídas de produtos e serviços.
+
+    Seja bem vindo e aproveite o sistema.
+</p>
+
+<img src="../../../static/assets/diagrama.png" alt="Imagem de estoque" class="img-fluid">
+<img src="../../../static/assets/usecase.png" alt="Imagem de estoque" class="img-fluid">
+
+{% endif %}
+
 {% endblock %}

@@ -25,9 +25,6 @@ SECRET_KEY = "django-insecure-9*iv48l29)z!_=l(&v7%4=&4qv5t2x!fhgida7=jb)^02!(v9n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -41,6 +38,7 @@ INSTALLED_APPS = [
     "cadastros.apps.CadastrosConfig", # ativando esse modulo
     "crispy_forms", # ativando esse modulo
     "crispy_bootstrap5", # ativando esse modulo    
+    "usuarios.apps.UsuariosConfig",
 ]
 
 MIDDLEWARE = [
@@ -148,3 +146,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Configurando o Crispy
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
+ALLOWED_HOSTS = ["*"]
+LOGIN_REDIRECT_URL = 'index'
+LOGIN_URL = 'login'
+LOGOUT_REDIRECT_URL = 'login'

@@ -1,0 +1,57 @@
+{% extends "paginas/modelo.html" %}
+
+{% block conteudo %}
+<h3>
+    Lista de <b>Pessoas</b>
+</h3>
+
+<hr>
+
+<table class="table table-striped">
+    <thead>
+        <th>Nome completo</th>
+        <th>CPF</th>
+        <th>Email</th>
+        <th>Telefone</th>
+        <th>Cadastro</th>
+        <th>Ultima edição</th>
+        <th>Opções</th>
+    </thead>
+    <tbody>
+        {% for object in object_list %}
+            <tr>
+                <td>{{ object.nome }}{{ object.sobrenome }}</td>
+                <td>{{ object.cpf }}</td>
+                <td>{{ object.email }}</td>
+                <td>{{ object.telefone }}</td>
+                <td>{{ object.criado_em|date:"d/m/Y \à\s H:i" }}</td>
+                <td>{{ object.atualizado_em|date:"d/m/Y \à\s H:i" }}</td>
+                <td>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-gear"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item link-primary" href="{% url 'editar-pessoa' object.pk  %}">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item link-danger" href="{% url 'excluir-pessoa' object.pk  %}">
+                                    <i class="bi bi-trash"></i> Excluir
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5">Nenhum registro encontrado.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

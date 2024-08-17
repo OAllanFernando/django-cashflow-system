@@ -1,0 +1,56 @@
+{% extends "paginas/modelo.html" %}
+
+{% block conteudo %}
+<h3>
+    Lista de <b>Saídas</b>
+</h3>
+
+<hr>
+
+<table class="table table-striped">
+    <thead>
+        <th>Descrição</th>
+        <th>Data inserida</th>
+        <th>Data cadastro</th>
+        <th>Itens</th>
+        <th>Cliente</th>
+        <th>Valor</th>
+    </thead>
+    <tbody>
+        {% for object in object_list %}
+            <tr>
+                <td>{{ object.descricao }}</td>
+                <td>{{ object.data }}</td>
+                <td>{{ object.criado_em|date:"d/m/Y \à\s H:i" }}</td>
+                <td>{{ object.item_saidas }}</td>
+                <td>{{ object.cliente }}</td>
+                <td>{{ object.valor }}</td>
+                <td>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-gear"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item link-primary" href="{% url 'editar-saida' object.pk  %}">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item link-danger" href="{% url 'excluir-saida' object.pk  %}">
+                                    <i class="bi bi-trash"></i> Excluir
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5">Nenhum registro encontrado.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

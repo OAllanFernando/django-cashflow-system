@@ -1,0 +1,31 @@
+{% extends "paginas/modelo.html" %}
+
+{% load static %}
+
+{% block conteudo %}
+<h3 class="text-danger">
+    {{ titulo|default:"Exclusão de registros" }}
+</h3>
+
+<hr>
+
+<div class="row">
+    <div class="col-lg">
+        
+        <form method="POST">
+            {% csrf_token %}
+        
+            <p class="fs-4">
+                Deseja excluir o registro
+                <span class="fw-bold">{{ object }}</span>?
+            </p>
+        
+            <button type="submit" class="btn btn-danger">
+                Excluir
+            </button>
+        
+        </form>
+        
+    </div>
+</div>
+{% endblock %}
