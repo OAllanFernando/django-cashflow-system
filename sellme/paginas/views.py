@@ -1,8 +1,9 @@
 from django.views.generic import TemplateView
+from braces.views import GroupRequiredMixin
 # Create your views here.
 
 # Repare aqui Allan, em Python a herança vem como parâmetro
-class IndexView(TemplateView):
+class IndexView(GroupRequiredMixin, TemplateView):
     template_name = "paginas/index.html"
 
     def get_context_data(self, **kwargs):
@@ -10,8 +11,8 @@ class IndexView(TemplateView):
         context['titulo'] = "Página Inicial"
         return context
 
-class SobreView(TemplateView):
+class SobreView(GroupRequiredMixin, TemplateView):
     template_name = "paginas/sobre.html"
 
-class CriadorView(TemplateView):
+class CriadorView(GroupRequiredMixin , TemplateView):
     template_name = "paginas/criador.html"

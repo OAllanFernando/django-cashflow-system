@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Estado(models.Model):
@@ -9,7 +10,6 @@ class Estado(models.Model):
     def __str__(self):
         return f"{self.nome} - {self.sigla} - {self.pais}"
         # return self.nome
-
 
 class Cidade(models.Model):
     nome = models.CharField(max_length=100)
@@ -27,6 +27,7 @@ class Pessoa(models.Model):
     email = models.EmailField(max_length=100, blank=True, null=True)
     telefone = models.CharField(max_length=15)
     cadastrado_em = models.DateTimeField(auto_now_add=True)
+    cadastrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
     atualizado_em = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -38,7 +39,7 @@ class Endereco(models.Model):
     bairro = models.CharField(max_length=100)
     cidade = models.ForeignKey(Cidade, on_delete=models.PROTECT)
     pessoa = models.ForeignKey(Pessoa, on_delete=models.CASCADE, related_name='enderecos')
-
+    
     def __str__(self):
         return f"{self.rua}, {self.numero}, {self.bairro}"
 
@@ -50,7 +51,8 @@ class Produto(models.Model):
     urlImagem = models.URLField(max_length=200)
     cadastrado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
-    
+    cadastrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+
     def __str__(self):
         return f"{self.nome}"
         # return self.nome
@@ -70,6 +72,7 @@ class Servico(models.Model):
     urlImagem = models.URLField(max_length=200)
     cadastrado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+    cadastrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
 
     def __str__(self):
         return f"{self.nome}"
@@ -86,6 +89,7 @@ class Entrada(models.Model):
     itens = models.ManyToManyField(Item, related_name='item_entradas')
     cliente = models.ForeignKey(Pessoa, on_delete=models.PROTECT)
     servico = models.ManyToManyField(Servico, related_name='entradas')
+    cadastrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
 
     def __str__(self):
         return f"Entrada: {self.descricao} - {self.data}"
@@ -99,6 +103,7 @@ class Saida(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
     itens = models.ManyToManyField(Item, related_name='item_saidas')
     cliente = models.ForeignKey(Pessoa, on_delete=models.PROTECT)
+    cadastrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
 
     def __str__(self):
         return f"Saída: {self.descricao} - {self.data}"

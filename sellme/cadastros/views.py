@@ -1,16 +1,13 @@
 # from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
-# Create your views here.
-
 from .models import Estado, Cidade, Endereco, Pessoa, Produto, Servico, Entrada, Saida
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-
+from braces.views import GroupRequiredMixin
 from django.urls import reverse_lazy
 
 
 class EstadoCreate(LoginRequiredMixin, CreateView):
-    login_url = reverse_lazy('login')
     model = Estado
     fields = ['nome', 'sigla', 'pais']
     template_name = 'cadastros/form.html'
@@ -23,7 +20,6 @@ class EstadoCreate(LoginRequiredMixin, CreateView):
 
 
 class EstadoUpdate(LoginRequiredMixin, UpdateView):
-    login_url = reverse_lazy('login')
     model = Cidade
     fields = ['nome', 'estado']
     template_name = 'cadastros/form.html'
@@ -35,12 +31,13 @@ class EstadoUpdate(LoginRequiredMixin, UpdateView):
         return context
 
 class EstadoList(LoginRequiredMixin, ListView):
-    login_url = reverse_lazy('login')
     template_name = 'cadastros/list/estado.html'
     model = Estado
+    
+    def get_queryset(self):
+        return Estado.objects.all()
 
 class EstadoDelete(LoginRequiredMixin, DeleteView):
-    login_url = reverse_lazy('login')
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-estado')
     model = Estado
@@ -49,7 +46,6 @@ class EstadoDelete(LoginRequiredMixin, DeleteView):
 
 
 class CidadeCreate(LoginRequiredMixin, CreateView):
-    login_url = reverse_lazy('login')
     model = Cidade
     fields = ['nome', 'estado']
     template_name = 'cadastros/form.html'
@@ -62,7 +58,6 @@ class CidadeCreate(LoginRequiredMixin, CreateView):
 
 
 class CidadeUpdate(LoginRequiredMixin, UpdateView):
-    login_url = reverse_lazy('login')
     model = Cidade
     fields = ['nome', 'estado']
     template_name = 'cadastros/form.html'
@@ -74,15 +69,13 @@ class CidadeUpdate(LoginRequiredMixin, UpdateView):
         return context
     
 
-class CidadeDelete(LoginRequiredMixin, DeleteView):
-    login_url = reverse_lazy('login')
+class CidadeDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-cidade')
     model = Cidade
-
+    group_required = "Administrador"
 
 class CidadeList(LoginRequiredMixin, ListView):
-    login_url = reverse_lazy('login')
     template_name = 'cadastros/list/cidade.html'
     model = Cidade
 
@@ -90,11 +83,22 @@ class CidadeList(LoginRequiredMixin, ListView):
 ###############################################################################
 
 class PessoaCreate(LoginRequiredMixin, CreateView):
-    login_url = reverse_lazy('login')
     model = Pessoa
     fields = ['nome', 'sobrenome', 'cpf', 'email', 'telefone']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+    filds = ['nome', 'sobrenome', 'cpf', 'email', 'telefone']
+
+    def form_valid(self, form):
+        # Antes de criar objeto e salvar no banco
+        form.instance.cadastrado_por = self.request.user
+        url_sucesso = super().form_valid(form)
+        # Depois de criar objeto e salvar no banco
+        # self.object.nome_completo = self.object.nome_completo + "@"
+        # from hashlib import md5
+        # self.object.codigo = md5(self.object.pk)
+        # self.object.save()
+        return url_sucesso
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -102,11 +106,20 @@ class PessoaCreate(LoginRequiredMixin, CreateView):
         return context
 
 class PessoaUpdate(LoginRequiredMixin, UpdateView):
-    login_url = reverse_lazy('login')
     model = Pessoa
     fields = ['nome', 'sobrenome', 'cpf', 'email', 'telefone']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+     # Alterar a consulta padrão que retorna o objeto com base no id
+    def get_object(self):
+        pessoa = Pessoa.objects.get(
+            pk=self.kwargs["pk"], 
+            # Além do id, faz um WHERE também com o usuário
+            cadastrado_por=self.request.user 
+        )
+        return pessoa
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -114,20 +127,24 @@ class PessoaUpdate(LoginRequiredMixin, UpdateView):
         return context
     
 class PessoaList(LoginRequiredMixin, ListView):
-    login_url = reverse_lazy('login')
     template_name = 'cadastros/list/pessoa.html'
     model = Pessoa
+    
+     # Altera a query padrão para consuultar registros (SELECT)
+    def get_queryset(self):
+        query = Pessoa.objects.filter(cadastrado_por=self.request.user)
+        return query
 
-class PessoaDelete(LoginRequiredMixin, DeleteView):
-    login_url = reverse_lazy('login')
+class PessoaDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-pessoa')
     model = Pessoa
+    group_required = "Administrador"
+
 
 ###############################################################################
 
 class EnderecoCreate(LoginRequiredMixin, CreateView):
-    login_url = reverse_lazy('login')
     model = Endereco
     fields = ['rua', 'numero', 'bairro', 'cidade', 'pessoa']
     template_name = 'cadastros/form.html'
@@ -139,7 +156,6 @@ class EnderecoCreate(LoginRequiredMixin, CreateView):
         return context
 
 class EnderecoUpdate(LoginRequiredMixin, UpdateView):
-    login_url = reverse_lazy('login')
     model = Endereco
     fields = ['rua', 'numero', 'bairro', 'cidade', 'pessoa']
     template_name = 'cadastros/form.html'
@@ -151,25 +167,30 @@ class EnderecoUpdate(LoginRequiredMixin, UpdateView):
         return context
     
 class EnderecoList(LoginRequiredMixin, ListView):
-    login_url = reverse_lazy('login')
     template_name = 'cadastros/list/endereco.html'
     model = Endereco
 
-class EnderecoDelete(LoginRequiredMixin, DeleteView):
-    login_url = reverse_lazy('login')
+class EnderecoDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-endereco')
     model = Endereco
+    group_required = "Administrador"
+
 
 
 ###############################################################################
 
 class ProdutoCreate(LoginRequiredMixin, CreateView):
-    login_url = reverse_lazy('login')
     model = Produto
     fields = ['nome', 'descricao', 'preco', 'urlImagem']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+    def form_valid(self, form):
+        form.instance.cadastrado_por = self.request.user
+        url_sucesso = super().form_valid(form)
+        return url_sucesso
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -177,11 +198,18 @@ class ProdutoCreate(LoginRequiredMixin, CreateView):
         return context
 
 class ProdutoUpdate(LoginRequiredMixin, UpdateView):
-    login_url = reverse_lazy('login')
     model = Produto
     fields = ['nome', 'descricao', 'preco', 'urlImagem']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+    def get_object(self):
+        produto = Produto.objects.get(
+            pk=self.kwargs["pk"], 
+            cadastrado_por=self.request.user 
+        )
+        return produto
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -189,16 +217,14 @@ class ProdutoUpdate(LoginRequiredMixin, UpdateView):
         return
 
 class ProdutoList(LoginRequiredMixin, ListView):
-    login_url = reverse_lazy('login')
     template_name = 'cadastros/list/produto.html'
     model = Produto
 
-class ProdutoDelete(LoginRequiredMixin, DeleteView):
-    login_url = reverse_lazy('login')
+class ProdutoDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-produto')
     model = Produto
-
+    group_required = "Administrador"
 
 ###############################################################################
 
@@ -227,11 +253,15 @@ class ProdutoDelete(LoginRequiredMixin, DeleteView):
 ###############################################################################
 
 class ServicoCreate(LoginRequiredMixin, CreateView):
-    login_url = reverse_lazy('login')
     model = Servico
     fields = ['nome', 'descricao', 'preco', 'urlImagem']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+    def form_valid(self, form):
+        form.instance.cadastrado_por = self.request.user
+        url_sucesso = super().form_valid(form)
+        return url_sucesso
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -239,11 +269,19 @@ class ServicoCreate(LoginRequiredMixin, CreateView):
         return context
     
 class ServicoUpdate(LoginRequiredMixin, UpdateView):
-    login_url = reverse_lazy('login')
     model = Servico
     fields = ['nome', 'descricao', 'preco', 'urlImagem']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+    def get_object(self):
+        servico = Servico.objects.get(
+            pk=self.kwargs["pk"], 
+            # Além do id, faz um WHERE também com o usuário
+            cadastrado_por=self.request.user 
+        )
+        return servico
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -251,25 +289,29 @@ class ServicoUpdate(LoginRequiredMixin, UpdateView):
         return
 
 class ServicoList(LoginRequiredMixin, ListView):
-    login_url = reverse_lazy('login')
     template_name = 'cadastros/list/servico.html'
     model = Servico
 
-class ServicoDelete(LoginRequiredMixin, DeleteView):
-    login_url = reverse_lazy('login')
+class ServicoDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-servico')
     model = Servico
+    group_required = "Administrador"
 
 
 ###############################################################################
 
 class EntradaCreate(LoginRequiredMixin, CreateView):
-    login_url = reverse_lazy('login')
     model = Entrada
     fields = ['descricao', 'data', 'valor', 'itens', 'cliente', 'servico']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+    def form_valid(self, form):
+        form.instance.cadastrado_por = self.request.user
+        url_sucesso = super().form_valid(form)
+        return url_sucesso
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -277,11 +319,18 @@ class EntradaCreate(LoginRequiredMixin, CreateView):
         return context
 
 class EntradaUpdate(LoginRequiredMixin, UpdateView):
-    login_url = reverse_lazy('login')
     model = Entrada
     fields = ['descricao', 'data', 'valor', 'itens', 'cliente', 'servico']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+    def get_object(self):
+        entrada = Entrada.objects.get(
+            pk=self.kwargs["pk"], 
+            # Além do id, faz um WHERE também com o usuário
+            cadastrado_por=self.request.user 
+        )
+        return entrada
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -289,25 +338,29 @@ class EntradaUpdate(LoginRequiredMixin, UpdateView):
         return context
 
 class EntradaList(LoginRequiredMixin, ListView):
-    login_url = reverse_lazy('login')
     template_name = 'cadastros/list/entrada.html'
     model = Entrada
 
-class EntradaDelete(LoginRequiredMixin, DeleteView):
-    login_url = reverse_lazy('login')
+class EntradaDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-entrada')
     model = Entrada
+    group_required = "Administrador"
+
 
 
 ###############################################################################
 
 class SaidaCreate(LoginRequiredMixin, CreateView):
-    login_url = reverse_lazy('login')
     model = Saida
     fields = ['descricao', 'data', 'valor', 'itens', 'cliente']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+    def form_valid(self, form):
+        form.instance.cadastrado_por = self.request.user
+        url_sucesso = super().form_valid(form)
+        return url_sucesso
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -315,27 +368,34 @@ class SaidaCreate(LoginRequiredMixin, CreateView):
         return context
 
 class SaidaUpdate(LoginRequiredMixin, UpdateView):
-    login_url = reverse_lazy('login')
     model = Saida
     fields = ['descricao', 'data', 'valor', 'itens', 'cliente']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+
+    def get_object(self):
+        entrada = Entrada.objects.get(
+            pk=self.kwargs["pk"], 
+            # Além do id, faz um WHERE também com o usuário
+            cadastrado_por=self.request.user 
+        )
+        return entrada
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Atualização de Saída'
         return context
 
-class SaidaList(LoginRequiredMixin, ListView): 
-    login_url = reverse_lazy('login')
+class SaidaList(LoginRequiredMixin, ListView):
     template_name = 'cadastros/list/saida.html'
     model = Saida
 
-class SaidaDelete(LoginRequiredMixin, DeleteView):
-    login_url = reverse_lazy('login')
+class SaidaDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-saida')
     model = Saida
+    group_required = "Administrador"
+
 
 ###############################################################################
 
