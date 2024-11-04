@@ -3,7 +3,7 @@ from braces.views import GroupRequiredMixin
 # Create your views here.
 
 # Repare aqui Allan, em Python a herança vem como parâmetro
-class IndexView(GroupRequiredMixin, TemplateView):
+class IndexView(TemplateView):
     template_name = "paginas/index.html"
 
     def get_context_data(self, **kwargs):
@@ -11,8 +11,10 @@ class IndexView(GroupRequiredMixin, TemplateView):
         context['titulo'] = "Página Inicial"
         return context
 
-class SobreView(GroupRequiredMixin, TemplateView):
+class SobreView(TemplateView):
     template_name = "paginas/sobre.html"
 
-class CriadorView(GroupRequiredMixin , TemplateView):
+class CriadorView(TemplateView):
     template_name = "paginas/criador.html"
+    
+    

@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     "paginas.apps.PaginasConfig", # ativando esse modulo
     "cadastros.apps.CadastrosConfig", # ativando esse modulo
     "crispy_forms", # ativando esse modulo
-    "crispy_bootstrap5", # ativando esse modulo    
+    "crispy_bootstrap5", # ativando esse modulo
+    "debug_toolbar", # ativando esse modulo
     "usuarios.apps.UsuariosConfig",
 ]
 
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "sellme.urls"
@@ -151,3 +153,7 @@ ALLOWED_HOSTS = ["*"]
 LOGIN_REDIRECT_URL = 'index'
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
+
+INTERNAL_IPS = [
+    "127.0.0.1"
+]
