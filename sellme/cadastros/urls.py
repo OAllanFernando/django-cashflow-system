@@ -7,7 +7,7 @@ from.views import ProdutoCreate, ProdutoUpdate, ProdutoList, ProdutoDelete
 from.views import EntradaCreate, EntradaUpdate, EntradaList, EntradaDelete
 from.views import SaidaCreate, SaidaUpdate, SaidaList, SaidaDelete
 from.views import ServicoCreate, ServicoUpdate, ServicoList, ServicoDelete
-
+from .views import ItemProdutoCreate, ItemServicoCreate #, ItemProdutoUpdate, ItemProdutoList, ItemProdutoDelete
 
 urlpatterns = [
     path('cadastrar/estado/', EstadoCreate.as_view(), name='cadastrar-estado'),
@@ -54,6 +54,8 @@ urlpatterns = [
     path('excluir/servico/<int:pk>/', ServicoDelete.as_view(), name='excluir-servico'),
 
 
-    
+    path('cadastrar/item-produto/', ItemProdutoCreate.as_view(), name='cadastrar-itemproduto'),
+    path('cadastrar/item-servico/', ItemServicoCreate.as_view(), name='cadastrar-itemservico'),
+        
 ]
 

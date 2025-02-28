@@ -1,17 +1,22 @@
 # from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Estado, Cidade, Endereco, Pessoa, Produto, Servico, Entrada, Saida
+from .models import Estado, Cidade, Endereco, Pessoa, Produto, Servico, Entrada, Saida, ItemProduto, ItemServico
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 from braces.views import GroupRequiredMixin
 from django.urls import reverse_lazy
+from django.contrib.messages.views import SuccessMessageMixin
+from django_filters.views import FilterView
+from .filters import CidadeFilter, ProdutoFilter
 
 
-class EstadoCreate(LoginRequiredMixin, CreateView):
+
+class EstadoCreate(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = Estado
     fields = ['nome', 'sigla', 'pais']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
+    success_message = 'Estado cadastrado com sucesso!'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -75,9 +80,13 @@ class CidadeDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     model = Cidade
     group_required = "Administrador"
 
-class CidadeList(LoginRequiredMixin, ListView):
+class CidadeList(LoginRequiredMixin, FilterView):
     template_name = 'cadastros/list/cidade.html'
     model = Cidade
+    filterset_class = CidadeFilter
+
+    def get_queryset(self):
+        return Cidade.objects.all().select_related('estado')
 
 
 ###############################################################################
@@ -132,7 +141,7 @@ class PessoaList(LoginRequiredMixin, ListView):
     
      # Altera a query padrão para consuultar registros (SELECT)
     def get_queryset(self):
-        query = Pessoa.objects.filter(cadastrado_por=self.request.user)
+        query = Pessoa.objects.filter(cadastrado_por=self.request.user).select_related('cidade')
         return query
 
 class PessoaDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
@@ -170,6 +179,9 @@ class EnderecoList(LoginRequiredMixin, ListView):
     template_name = 'cadastros/list/endereco.html'
     model = Endereco
 
+    def get_queryset(self):
+        return Endereco.objects.filter(cadastrado_por=self.request.user).select_related('cidade', 'pessoa')
+
 class EnderecoDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-endereco')
@@ -190,7 +202,6 @@ class ProdutoCreate(LoginRequiredMixin, CreateView):
         form.instance.cadastrado_por = self.request.user
         url_sucesso = super().form_valid(form)
         return url_sucesso
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -216,9 +227,13 @@ class ProdutoUpdate(LoginRequiredMixin, UpdateView):
         context['titulo'] = 'Atualização de Produto'
         return
 
-class ProdutoList(LoginRequiredMixin, ListView):
+class ProdutoList(LoginRequiredMixin, FilterView):
     template_name = 'cadastros/list/produto.html'
     model = Produto
+    filterset_class = ProdutoFilter
+
+    def get_queryset(self):
+        return Produto.objects.filter(cadastrado_por=self.request.user)
 
 class ProdutoDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
@@ -292,6 +307,9 @@ class ServicoList(LoginRequiredMixin, ListView):
     template_name = 'cadastros/list/servico.html'
     model = Servico
 
+    def get_queryset(self):
+        return Servico.objects.filter(cadastrado_por=self.request.user)
+
 class ServicoDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
     success_url = reverse_lazy('listar-servico')
@@ -303,11 +321,15 @@ class ServicoDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
 
 class EntradaCreate(LoginRequiredMixin, CreateView):
     model = Entrada
-    fields = ['descricao', 'data', 'valor', 'itens', 'cliente', 'servico']
+    fields = ['descricao', 'data', 'cliente']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
 
     def form_valid(self, form):
+        entrada = Entrada.objects.get(cadastrado_por=self.request.user, aberta=True)
+        if entrada:
+            form.add_error("aberta", 'Já existe uma entrada aberta')
+            return self.form_invalid(form)
         form.instance.cadastrado_por = self.request.user
         url_sucesso = super().form_valid(form)
         return url_sucesso
@@ -340,6 +362,9 @@ class EntradaUpdate(LoginRequiredMixin, UpdateView):
 class EntradaList(LoginRequiredMixin, ListView):
     template_name = 'cadastros/list/entrada.html'
     model = Entrada
+    
+    def get_queryset(self):
+        return Entrada.objects.filter(cadastrado_por=self.request.user).select_related('cliente')
 
 class EntradaDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
@@ -353,11 +378,28 @@ class EntradaDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
 
 class SaidaCreate(LoginRequiredMixin, CreateView):
     model = Saida
-    fields = ['descricao', 'data', 'valor', 'itens', 'cliente']
+    fields = ['descricao', 'data', 'cliente']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
 
+    # se já existe uma saída já redireciona para o updateView sem carregar o form
+    def dispatch(self, request, *args, **kwargs):
+        saida = Saida.objects.filter(cadastrado_por=self.request.user, aberta=True)
+        if saida.exists():
+            
+            from django.http import HttpResponseRedirect
+            redirect_url = reverse_lazy('editar-saida', kwargs={"pk": saida[0].pk})
+            print(redirect_url)
+            return HttpResponseRedirect(redirect_url)
+            
+        return super().dispatch(request, *args, **kwargs)
+
+
     def form_valid(self, form):
+        saida = Saida.objects.filter(cadastrado_por=self.request.user, aberta=True)
+        if saida.exists():
+            form.add_error("aberta", 'Já existe uma saída aberta')
+            return self.form_invalid(form)
         form.instance.cadastrado_por = self.request.user
         url_sucesso = super().form_valid(form)
         return url_sucesso
@@ -369,26 +411,48 @@ class SaidaCreate(LoginRequiredMixin, CreateView):
 
 class SaidaUpdate(LoginRequiredMixin, UpdateView):
     model = Saida
-    fields = ['descricao', 'data', 'valor', 'itens', 'cliente']
+    fields = ['descricao', 'data', 'cliente', 'fechar_saida']
     template_name = 'cadastros/form.html'
     success_url = reverse_lazy('index')
 
     def get_object(self):
-        entrada = Entrada.objects.get(
+        saida = Saida.objects.get(
             pk=self.kwargs["pk"], 
             # Além do id, faz um WHERE também com o usuário
-            cadastrado_por=self.request.user 
+            cadastrado_por=self.request.user,
+            aberta=True
         )
-        return entrada
+        return saida
+    
+    def form_valid(self, form):
+
+        if form.instance.fechar_saida:
+
+            itens_produto = ItemProduto.objects.filter(usuario=self.request.user, saida__aberta=True)
+            itens_servico = ItemServico.objects.filter(usuario=self.request.user, saida__aberta=True)
+
+            if not itens_produto.exists() and not itens_servico.exists():
+                form.add_error(None, 'Adicione itens a saída')
+                return self.form_invalid(form)
+
+            
+            form.instance.aberta = False
+
+        url_sucesso = super().form_valid(form)
+        return url_sucesso    
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Atualização de Saída'
         return context
 
+
 class SaidaList(LoginRequiredMixin, ListView):
     template_name = 'cadastros/list/saida.html'
     model = Saida
+
+    def get_queryset(self):
+        return Saida.objects.filter(cadastrado_por=self.request.user).select_related('cliente')
 
 class SaidaDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
     template_name = 'cadastros/form-excluir.html'
@@ -399,3 +463,67 @@ class SaidaDelete(GroupRequiredMixin, LoginRequiredMixin, DeleteView):
 
 ###############################################################################
 
+
+class ItemProdutoCreate(LoginRequiredMixin, CreateView):
+    model = ItemProduto
+    fields = ['quantidade', 'produto', 'entrada', 'saida']
+    template_name = 'cadastros/form.html'
+    success_url = reverse_lazy('index')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['entrada'].queryset = Entrada.objects.filter(cadastrado_por=self.request.user, aberta=True)
+        form.fields['saida'].queryset = Saida.objects.filter(cadastrado_por=self.request.user, aberta=True)
+        return form
+
+    def form_valid(self, form):
+        if form.instance.entrada and form.instance.saida:
+            form.add_error("entrada", 'Item não pode estar em uma entrada e saída ao mesmo tempo')
+            form.add_error("saida", 'Item não pode estar em uma entrada e saída ao mesmo tempo')
+            return self.form_invalid(form)
+        
+        if not form.instance.entrada and not form.instance.saida:
+            form.add_error("entrada", 'Item deve estar em uma entrada ou saída')
+            form.add_error("saida", 'Item deve estar em uma entrada ou saída')
+            return self.form_invalid(form)
+        
+        form.instance.usuario = self.request.user
+        url_sucesso = super().form_valid(form)
+        return url_sucesso
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Adicionar de Item de Produto'
+        return context
+    
+class ItemServicoCreate(LoginRequiredMixin, CreateView):
+    model = ItemServico
+    fields = ['quantidade', 'servico', 'entrada', 'saida']
+    template_name = 'cadastros/form.html'
+    success_url = reverse_lazy('index')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['entrada'].queryset = Entrada.objects.filter(cadastrado_por=self.request.user, aberta=True)
+        form.fields['saida'].queryset = Saida.objects.filter(cadastrado_por=self.request.user, aberta=True)
+        return form
+
+    def form_valid(self, form):
+        if form.instance.entrada and form.instance.saida:
+            form.add_error("entrada", 'Item não pode estar em uma entrada e saída ao mesmo tempo')
+            form.add_error("saida", 'Item não pode estar em uma entrada e saída ao mesmo tempo')
+            return self.form_invalid(form)
+        
+        if not form.instance.entrada and not form.instance.saida:
+            form.add_error("entrada", 'Item deve estar em uma entrada ou saída')
+            form.add_error("saida", 'Item deve estar em uma entrada ou saída')
+            return self.form_invalid(form)
+        
+        form.instance.usuario = self.request.user
+        url_sucesso = super().form_valid(form)
+        return url_sucesso
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Adicionar de Item de Serviço'
+        return context

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5", # ativando esse modulo
     "debug_toolbar", # ativando esse modulo
     "usuarios.apps.UsuariosConfig",
+    "django_filters",
 ]
 
 MIDDLEWARE = [
@@ -157,3 +158,8 @@ LOGOUT_REDIRECT_URL = 'login'
 INTERNAL_IPS = [
     "127.0.0.1"
 ]
+
+from django.contrib.messages import constants as messages
+MESSAGE_TAAGS = {
+    messages.ERROR: 'danger'
+}

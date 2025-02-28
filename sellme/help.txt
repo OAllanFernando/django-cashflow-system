@@ -19,3 +19,8 @@ Cria um novo app
 
 python manage.py makemigrations  // cria o sql pra qxecucao
 python manage.py migrate // cria no banco
+
+
+
+Colocar mascara em algum outro pluguin, 
+Mascara ou datatable

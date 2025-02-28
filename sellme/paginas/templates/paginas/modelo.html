@@ -316,13 +316,46 @@
 
                         {% endblock %}
                     </div>
+                    {% if messages %}
+                    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    
+    
+                        {% for m in messages %}
+                        <div class="toast border-{{m.tags}}" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="toast-header border-{{m.tags}}">
+                                <strong class="me-auto">Aviso</strong>
+                                <small class="text-body-secondary">Agora</small>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                            <div class="toast-body">
+                                {{ m }}
+                            </div>
+                        </div>
+                        {% endfor %}
+    
+    
+                    </div>
+                    {% endif %}
                 </main>
+
+               
+
 
                 {% block rodape %}
                 <footer class="py-4 bg-light mt-auto">
                     <div class="container-fluid px-4">
                         <div class="d-flex align-items-center justify-content-between small">
-                            <div class="text-muted">Copyright &copy; Your Website 2023</div>
+                            <div class="text-muted">
+                                
+                                
+                                {%if messages %}
+                                {% for message in messages %}
+                                <div class="text-{{message.tags}}">
+                                    {{ message }}
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                                Copyright &copy; Your Website 2023</div>
                             <div>
                                 <a href="#">Privacy Policy</a>
                                 &middot;
@@ -344,6 +377,25 @@
         <script src="{% static 'assets/demo/chart-bar-demo.js' %}"></script>
         <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
         <script src="{% static 'js/datatables-simple-demo.js' %}"></script>
+
+        <script>
+            $(document).ready(function() {
+                $('.toast').toast('show');
+            });
+        </script>
+
+        <script>
+            $(document).ready(function () {
+    $('.card').hover(
+        function () {
+            $(this).css('box-shadow', '0 4px 8px rgba(0, 0, 0, 0.2)');
+        },
+        function () {
+            $(this).css('box-shadow', 'none');
+        }
+    );
+});
+        </script>
 
         {% block scripts %}        
 

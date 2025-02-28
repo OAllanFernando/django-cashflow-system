@@ -57,14 +57,6 @@ class Produto(models.Model):
         return f"{self.nome}"
         # return self.nome
 
-# fazer item entrada e saida diferentes (classes) 
-class Item(models.Model):
-    quantidade = models.IntegerField()
-    produto = models.ForeignKey(Produto, on_delete=models.PROTECT)
-
-    def __str__(self):
-        return f"{self.quantidade} - {self.produto.nome}"
-    
 class Servico(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.TextField()
@@ -78,18 +70,18 @@ class Servico(models.Model):
         return f"{self.nome}"
         # return self.nome
 
-
 # 
 class Entrada(models.Model):
     descricao = models.TextField()
     data = models.DateField()
-    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     cadastrado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
-    itens = models.ManyToManyField(Item, related_name='item_entradas')
+    # itens = models.ManyToManyField(Item, related_name='item_entradas')
     cliente = models.ForeignKey(Pessoa, on_delete=models.PROTECT)
-    servico = models.ManyToManyField(Servico, related_name='entradas')
+    # servico = models.ManyToManyField(Servico, related_name='entradas')
     cadastrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+    aberta = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Entrada: {self.descricao} - {self.data}"
@@ -98,12 +90,56 @@ class Entrada(models.Model):
 class Saida(models.Model):
     descricao = models.TextField()
     data = models.DateField()
-    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     cadastrado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
-    itens = models.ManyToManyField(Item, related_name='item_saidas')
+    # itens = models.ManyToManyField(Item, related_name='item_saidas')
     cliente = models.ForeignKey(Pessoa, on_delete=models.PROTECT)
     cadastrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+    aberta = models.BooleanField(default=True)
+    fechar_saida = models.BooleanField(default=False, verbose_name='Fechar saída')
 
     def __str__(self):
         return f"Saída: {self.descricao} - {self.data}"
+    
+
+    # fazer item entrada e saida diferentes (classes)   
+class ItemProduto(models.Model):
+    quantidade = models.IntegerField()
+    produto = models.ForeignKey(Produto, on_delete=models.PROTECT)
+    entrada = models.ForeignKey(Entrada, on_delete=models.PROTECT, related_name='itens_entrada', null=True, blank=True)
+    saida = models.ForeignKey(Saida, on_delete=models.PROTECT, related_name='itens_saida', null=True, blank=True)
+    usuario = models.ForeignKey(User, on_delete=models.PROTECT)
+
+
+    def save(self, *args, **kwargs):
+        if self.entrada and self.saida:
+            raise ValueError("Item não pode estar em uma entrada e saída ao mesmo tempo")
+        
+        if not self.entrada and not self.saida:
+            raise ValueError("Item deve estar em uma entrada ou saída")
+        
+        super(ItemProduto, self).save(*args, **kwargs)
+
+
+    def __str__(self):
+        return f"{self.quantidade} - {self.produto.nome}"
+    
+
+class ItemServico(models.Model):
+    quantidade = models.IntegerField()
+    servico = models.ForeignKey(Servico, on_delete=models.PROTECT)
+    entrada = models.ForeignKey(Entrada, on_delete=models.PROTECT, related_name='itens_servico_entrada', null=True)
+    saida = models.ForeignKey(Saida, on_delete=models.PROTECT, related_name='itens_servico_saida', null=True)
+    usuario = models.ForeignKey(User, on_delete=models.PROTECT)
+
+    def save(self, *args, **kwargs):
+        if self.entrada and self.saida:
+            raise ValueError("Item não pode estar em uma entrada e saída ao mesmo tempo")
+        if not self.entrada and not self.saida:
+            raise ValueError("Item deve estar em uma entrada ou saída")
+        super(ItemServico, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.quantidade} - {self.servico.nome}"
+
